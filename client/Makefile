@@ -9,7 +9,7 @@ indiprovclient.o: indiprovclient.cpp
 	gcc -std=c++11 -fPIC -c $<
 
 main:
-	gcc -o main main.cpp -L. -lindiprovclient -L/usr/lib64 -lstdc++
+	gcc  -std=c++11 -o main main.cpp -L. -lindiprovclient -L/usr/lib64 -lstdc++
 .PHONY: clean
 clean:
 	rm -f *.so* *.o main

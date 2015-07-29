@@ -28,6 +28,7 @@ public:
     int setwasDerivedFrom(int genEntID, int usdEntID, int actID, int genID, int usgID, string label, string type);
     int setwasAttributedTo(int entID,int agentID,string label, string type);
     int setwasAssociatedWith(int actID, int agentID, int planID, string label, string role, string type);
+    int setwasInformedBy(int informed, int informant, string label, string type);
     int setwasStartedBy(int actID, int entID, int starterActID, string sTime, string label, string location, string role, string type);
     int setwasEndedBy(int actID, int entID, int enderActID, string eTime, string label, string location, string role, string type);
     //prov query function
@@ -39,6 +40,7 @@ public:
     string getWasDerivedFroms();
     string getWasAttributedTos();
     string getWasAssociatedWiths();
+    string getwasInformedBys();
     string getwasStartedBys();
     string getwasEndedBys();
 
@@ -51,6 +53,7 @@ public:
     vector<ProvUtils::WasDerivedFrom> deSerializeWasDerivedFroms(char *wasDerivedFromsStr);
     vector<ProvUtils::WasAttributedTo> deSerializeWasAttributedTos(char *wasAttributedToStr);
     vector<ProvUtils::WasAssociatedWith> deSerializeWasAssociatedWiths(char *wasAssociatedWithsStr);
+    vector<ProvUtils::WasInformedBy>  deSerializeWasInformedBys(char *wasInformedByStr);
     vector<ProvUtils::WasStartedBy> deSerializeWasStartedBys(char *wasStartedBysStr);
     vector<ProvUtils::WasEndedBy> deSerializeWasEndedBys(char *WasEndedBysStr);
 

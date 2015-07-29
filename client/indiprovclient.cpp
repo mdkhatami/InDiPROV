@@ -32,7 +32,6 @@ string InDiProvClient::getCurrentTime(){
 }
 string InDiProvClient::ESender(string msgstr)
 {
-
     zmq::message_t msg (msgstr.size()+1);
     memcpy ((void *)msg.data(), msgstr.c_str(), msgstr.size()+1);
     socket->send (msg);
@@ -217,6 +216,15 @@ int InDiProvClient::setwasAssociatedWith(int actID, int agentID, int planID, str
     myCommand.push_back(type);
     return atoi((ESender(serializeToJson(myCommand))).c_str());
 }
+int InDiProvClient::setwasInformedBy(int informed, int informant, string label, string type){
+    vector<string> myCommand;
+    myCommand.push_back("setwasInformedBy");
+    myCommand.push_back(std::to_string(informed));
+    myCommand.push_back(std::to_string(informant));
+    myCommand.push_back(label);
+    myCommand.push_back(type);
+    return atoi((ESender(serializeToJson(myCommand))).c_str());
+}
 int InDiProvClient::setwasStartedBy(int actID, int entID, int starterActID, string sTime, string label, string location, string role, string type){
     vector<string> myCommand;
     myCommand.push_back("setwasStartedBy");
@@ -228,6 +236,7 @@ int InDiProvClient::setwasStartedBy(int actID, int entID, int starterActID, stri
     myCommand.push_back(location);
     myCommand.push_back(role);
     myCommand.push_back(type);
+std::cout<<" setwasStartedBy vector created successfuly" << std::endl;
     return atoi((ESender(serializeToJson(myCommand))).c_str());
 
 }
@@ -293,6 +302,12 @@ string InDiProvClient::getWasAttributedTos(){
 string InDiProvClient::getWasAssociatedWiths(){
     vector<string> myCommand;
     myCommand.push_back("getWasAssociatedWiths");
+    myCommand.push_back("Reserve");
+    return ESender(serializeToJson(myCommand));
+}
+string InDiProvClient::getwasInformedBys(){
+    vector<string> myCommand;
+    myCommand.push_back("getwasInformedBys");
     myCommand.push_back("Reserve");
     return ESender(serializeToJson(myCommand));
 }
@@ -368,7 +383,6 @@ vector<ProvUtils::Activity> InDiProvClient::deSerializeActivities(char *activiti
     }
     return activities;
 }
-
 vector<ProvUtils::Agent> InDiProvClient::deSerializeAgents(char *agentsStr){
     json_object * jobj = json_tokener_parse(agentsStr);
     vector<ProvUtils::Agent> agents;
@@ -395,7 +409,6 @@ vector<ProvUtils::Agent> InDiProvClient::deSerializeAgents(char *agentsStr){
     }
     return agents;
 }
-
 vector<ProvUtils::Used> InDiProvClient::deSerializeUseds(char *usedsStr){
     json_object * jobj = json_tokener_parse(usedsStr);
     vector<ProvUtils::Used> useds;
@@ -559,6 +572,34 @@ vector<ProvUtils::WasAssociatedWith> InDiProvClient::deSerializeWasAssociatedWit
     }
     return wasAssociatedWiths;
 }
+vector<ProvUtils::WasInformedBy> InDiProvClient::deSerializeWasInformedBys(char *wasInformedByStr){
+    json_object * jobj = json_tokener_parse(wasInformedByStr);
+    vector<ProvUtils::WasInformedBy> wasInformedBys;
+    json_object_object_foreach(jobj, key, val) {
+        if (strcmp(key, "wasInformedBys") == 0){
+            json_object *jarray = json_object_object_get(jobj, key);
+            int arraylen = json_object_array_length(jarray);
+            for (int i=0; i< arraylen; i++){
+                json_object * tmpjobj = json_object_array_get_idx(jarray, i);
+                ProvUtils::WasInformedBy tmpWasInformedBy;
+                json_object_object_foreach(tmpjobj, tmpkey, tmpval){
+                    if (strcmp(tmpkey, "informed") == 0)
+                        tmpWasInformedBy.informed=json_object_get_string(tmpval);
+                    else if (strcmp(tmpkey, "informant") == 0)
+                        tmpWasInformedBy.informant=json_object_get_string(tmpval);
+                    else if (strcmp(tmpkey, "label") == 0)
+                        tmpWasInformedBy.label=json_object_get_string(tmpval);
+                    else if (strcmp(tmpkey, "type") == 0)
+                        tmpWasInformedBy.type=json_object_get_string(tmpval);
+                    else if (strcmp(tmpkey, "ID") == 0)
+                        tmpWasInformedBy.ID=json_object_get_string(tmpval);
+                }
+                wasInformedBys.push_back(tmpWasInformedBy);
+            }
+        }
+    }
+    return wasInformedBys;
+}
 vector<ProvUtils::WasStartedBy> InDiProvClient::deSerializeWasStartedBys(char *wasStartedBysStr){
     json_object * jobj = json_tokener_parse(wasStartedBysStr);
     vector<ProvUtils::WasStartedBy> wasStartedBys;
@@ -594,9 +635,7 @@ vector<ProvUtils::WasStartedBy> InDiProvClient::deSerializeWasStartedBys(char *w
         }
     }
     return wasStartedBys;
-
 }
-
 vector<ProvUtils::WasEndedBy> InDiProvClient::deSerializeWasEndedBys(char *WasEndedBysStr){
     json_object * jobj = json_tokener_parse(WasEndedBysStr);
     vector<ProvUtils::WasEndedBy> wasEndedBys;
@@ -632,5 +671,4 @@ vector<ProvUtils::WasEndedBy> InDiProvClient::deSerializeWasEndedBys(char *WasEn
         }
     }
     return wasEndedBys;
-
 }
