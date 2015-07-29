@@ -171,7 +171,6 @@ int InDiProv::setAgent(int wfid, string label, string location, string type){
     delete prep_stmt;
     return lastID;
 }
-
 int InDiProv::setused(int wfid, int actID, int entID, string usedTime, string label, string location, string role, string type){
     int lastID;
     sql::PreparedStatement *prep_stmt;
@@ -279,6 +278,26 @@ int InDiProv::setwasAttributedTo(int wfid, int entID,int agentID,string label, s
     prep_stmt->setInt(1, wfid);
     prep_stmt->setInt(2, entID);
     prep_stmt->setInt(3, agentID);
+    prep_stmt->setString(4, label);
+    prep_stmt->setString(5, type);
+    prep_stmt->execute();
+    //
+    prep_stmt = con->prepareStatement("SELECT LAST_INSERT_ID() as ID");
+    res = prep_stmt->executeQuery();
+    while (res->next())
+        lastID=res->getInt("ID");
+    delete prep_stmt;
+
+    return lastID;
+}
+int InDiProv::setwasInformedBy(int wfid, int informed, int informant, string label, string type){
+    int lastID;
+    sql::PreparedStatement *prep_stmt;
+    sql::ResultSet  *res;
+    prep_stmt = con->prepareStatement("INSERT INTO inDiProv.Communication (WFID, informed, informant, label, type) VALUES (?,?,?,?,?)");
+    prep_stmt->setInt(1, wfid);
+    prep_stmt->setInt(2, informed);
+    prep_stmt->setInt(3, informant);
     prep_stmt->setString(4, label);
     prep_stmt->setString(5, type);
     prep_stmt->execute();
@@ -445,6 +464,17 @@ vector<ProvUtils::WasAssociatedWith> InDiProv::getWasAssociatedWiths(int wfid){
         wasAssociatedWiths.push_back(ProvUtils::WasAssociatedWith{std::to_string(res->getInt("activity")),std::to_string(res->getInt("agent")),std::to_string(res->getInt("plan")),res->getString("label"),res->getString("role"),res->getString("type"),std::to_string(res->getInt("ID"))});
     return wasAssociatedWiths;
 }
+vector<ProvUtils::WasInformedBy> InDiProv::getWasInformedBys(int wfid){
+    sql::PreparedStatement *prep_stmt;
+    sql::ResultSet  *res;
+    vector<ProvUtils::WasInformedBy> wasInformedBys;
+    prep_stmt = con->prepareStatement("SELECT * FROM inDiProv.Communication where WFID=?");
+    prep_stmt->setInt(1, wfid);
+    res = prep_stmt->executeQuery();
+    while (res->next())
+        wasInformedBys.push_back(ProvUtils::WasInformedBy{std::to_string(res->getInt("informed")),std::to_string(res->getInt("informant")), res->getString("label"), res->getString("type"),std::to_string(res->getInt("ID"))});
+    return wasInformedBys;
+}
 vector<ProvUtils::WasStartedBy> InDiProv::getwasStartedBys(int wfid){
     sql::PreparedStatement *prep_stmt;
     sql::ResultSet  *res;
@@ -562,6 +592,8 @@ string InDiProv::queryParsing(char *tmpMsg){
             return std::to_string(setwasAttributedTo(WFID,atoi(commandVec[0].c_str()) ,atoi(commandVec[1].c_str()) ,commandVec[2],commandVec[3]));
         else if (Command.compare("setwasAssociatedWith")==0 && commandVec.size()==6)
             return std::to_string(setwasAssociatedWith(WFID,atoi(commandVec[0].c_str()) ,atoi(commandVec[1].c_str()) ,atoi(commandVec[2].c_str()) ,commandVec[3],commandVec[4],commandVec[5]));
+        else if (Command.compare("setwasInformedBy")==0 && commandVec.size()==4)
+            return std::to_string(setwasInformedBy(WFID,atoi(commandVec[0].c_str()) ,atoi(commandVec[1].c_str()) ,commandVec[2],commandVec[3]));
         else if (Command.compare("setwasStartedBy")==0 && commandVec.size()==8)
             return std::to_string(setwasStartedBy(WFID,atoi(commandVec[0].c_str()) ,atoi(commandVec[1].c_str()) ,atoi(commandVec[2].c_str()) ,commandVec[3],commandVec[4],commandVec[5],commandVec[6],commandVec[7]));
         else if (Command.compare("setwasEndedBy")==0 && commandVec.size()==8)
@@ -582,6 +614,8 @@ string InDiProv::queryParsing(char *tmpMsg){
             return serializeWasAttributedTos(getWasAttributedTos(WFID));
         else if (Command.compare("getWasAssociatedWiths")==0)
             return serializeWasAssociatedWiths(getWasAssociatedWiths(WFID));
+        else if (Command.compare("getwasInformedBys")==0)
+            return serializeWasInformedBys(getWasInformedBys(WFID));
         else if (Command.compare("getwasStartedBys")==0)
             return serializeWasStartedBys(getwasStartedBys(WFID));
         else if (Command.compare("getwasEndedBys")==0)
@@ -878,6 +912,33 @@ string InDiProv::serializeWasAssociatedWiths(vector<ProvUtils::WasAssociatedWith
     return json_object_to_json_string(jobj);
 }
 
+string InDiProv::serializeWasInformedBys(vector<ProvUtils::WasInformedBy> wasInformedBys){
+    json_object * jobj = json_object_new_object();
+    json_object *jarray = json_object_new_array();
+    for (int i = 0; i < wasInformedBys.size(); ++i) {
+        json_object * tmpjobj = json_object_new_object();
+
+
+        json_object *informedstr = json_object_new_string(wasInformedBys[i].informed.c_str());
+        json_object_object_add(tmpjobj,"informed", informedstr);
+
+        json_object *informantstr = json_object_new_string(wasInformedBys[i].informant.c_str());
+        json_object_object_add(tmpjobj,"informant", informantstr);
+
+        json_object *labelstr = json_object_new_string(wasInformedBys[i].label.c_str());
+        json_object_object_add(tmpjobj,"label", labelstr);
+
+        json_object *typestr = json_object_new_string(wasInformedBys[i].type.c_str());
+        json_object_object_add(tmpjobj,"type", typestr);
+
+        json_object *IDstr = json_object_new_string(wasInformedBys[i].ID.c_str());
+        json_object_object_add(tmpjobj,"ID", IDstr);
+
+        json_object_array_add(jarray,tmpjobj);
+    }
+    json_object_object_add(jobj,"wasInformedBys", jarray);
+    return json_object_to_json_string(jobj);
+}
 string InDiProv::serializeWasStartedBys(vector<ProvUtils::WasStartedBy> wasStartedBys){
 
     json_object * jobj = json_object_new_object();

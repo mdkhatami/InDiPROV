@@ -27,6 +27,7 @@ public:
     int setwasDerivedFrom(int wfid, int genEntID, int usdEntID, int actID, int genID, int usgID, string label, string type);
     int setwasAttributedTo(int wfid, int entID,int agentID,string label, string type);
     int setwasAssociatedWith(int wfid, int actID, int agentID, int planID, string label, string role, string type);
+    int setwasInformedBy(int wfid, int informed, int informant, string label, string type);
     int setwasStartedBy(int wfid, int actID, int entID, int starterActID, string sTime, string label, string location, string role, string type);
     int setwasEndedBy(int wfid, int actID, int entID, int enderActID, string eTime, string label, string location, string role, string type);
     //prov Query
@@ -38,6 +39,7 @@ public:
     vector<ProvUtils::WasDerivedFrom> getWasDerivedFroms(int wfid);
     vector<ProvUtils::WasAttributedTo> getWasAttributedTos(int wfid);
     vector<ProvUtils::WasAssociatedWith> getWasAssociatedWiths(int wfid);
+    vector<ProvUtils::WasInformedBy>  getWasInformedBys(int wfid);
     vector<ProvUtils::WasStartedBy> getwasStartedBys(int wfid);
     vector<ProvUtils::WasEndedBy> getwasEndedBys(int wfid);
 
@@ -60,6 +62,7 @@ public:
     string serializeWasDerivedFroms(vector<ProvUtils::WasDerivedFrom> wasDerivedFroms);
     string serializeWasAttributedTos(vector<ProvUtils::WasAttributedTo> wasAttributedTos);
     string serializeWasAssociatedWiths(vector<ProvUtils::WasAssociatedWith> wasAssociatedWiths);
+    string serializeWasInformedBys(vector<ProvUtils::WasInformedBy> wasInformedBys);
     string serializeWasStartedBys(vector<ProvUtils::WasStartedBy> wasStartedBys);
     string serializeWasEndedBys(vector<ProvUtils::WasEndedBy> wasEndedBys);
 

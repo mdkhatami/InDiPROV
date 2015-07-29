@@ -94,6 +94,13 @@ public:
         string type;
         string ID;
     };
+    struct WasInformedBy{
+        string informed;
+        string informant;
+        string label;
+        string type;
+        string ID;
+    };
     ProvUtils();
     ~ProvUtils();
 };
